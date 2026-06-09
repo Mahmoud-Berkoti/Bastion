@@ -1,0 +1,11 @@
+# generated artifacts
+bpf/vmlinux.h
+bpf/*.o
+bin/
+
+# vagrant
+.vagrant/
+
+# editor
+.DS_Store
+*.swp
