@@ -202,19 +202,24 @@ int bastion_xdp(struct xdp_md *ctx)
 	__u32 daddr = iph->daddr;
 	__u8 proto = iph->protocol;
 	__u16 sport = 0, dport = 0;
+	int has_l4 = 0;
 
+	/* A truncated L4 header must not bypass IP-level rules: degrade to
+	 * port-less matching instead of skipping rule evaluation. */
 	if (proto == IPPROTO_TCP) {
 		struct tcphdr *tcph = l4;
-		if ((void *)(tcph + 1) > data_end)
-			goto pass;
-		sport = tcph->source;
-		dport = tcph->dest;
+		if ((void *)(tcph + 1) <= data_end) {
+			sport = tcph->source;
+			dport = tcph->dest;
+			has_l4 = 1;
+		}
 	} else if (proto == IPPROTO_UDP) {
 		struct udphdr *udph = l4;
-		if ((void *)(udph + 1) > data_end)
-			goto pass;
-		sport = udph->source;
-		dport = udph->dest;
+		if ((void *)(udph + 1) <= data_end) {
+			sport = udph->source;
+			dport = udph->dest;
+			has_l4 = 1;
+		}
 	}
 
 	__u32 zero = 0;
@@ -245,7 +250,7 @@ int bastion_xdp(struct xdp_md *ctx)
 	}
 
 	/* 2. protocol/destination-port rules. */
-	if (proto == IPPROTO_TCP || proto == IPPROTO_UDP) {
+	if (has_l4) {
 		struct port_rule_key pk = {
 			.proto = proto,
 			.pad = 0,
