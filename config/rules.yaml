@@ -1,0 +1,21 @@
+# Bastion declarative rules. The control plane watches this file and
+# reconciles the BPF maps live — no restart, no program reload.
+
+# Source CIDRs to drop at the driver RX path (LPM longest-prefix match).
+blocklist:
+  - 10.11.0.66/32
+  - 192.0.2.0/24
+
+# Destination-port rules, matched after the blocklist.
+port_rules:
+  - proto: tcp
+    port: 2222
+    action: drop
+
+# Per-source token buckets, matched by CIDR. pps is the sustained rate,
+# burst is the bucket depth. Limits are approximate across CPUs (per-CPU
+# buckets, lock-free hot path) — see README.
+rate_limits:
+  - cidr: 10.11.0.0/24
+    pps: 1000
+    burst: 200

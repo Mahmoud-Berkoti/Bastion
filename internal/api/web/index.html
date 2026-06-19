@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bastion</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="mark">▚</span> bastion
+      <span class="sub">eBPF/XDP packet filter</span>
+    </div>
+    <div class="status" id="status">connecting…</div>
+  </header>
+
+  <main>
+    <section class="stats">
+      <div class="card">
+        <div class="label">throughput</div>
+        <div class="value"><span id="pps">–</span><span class="unit">pps</span></div>
+        <canvas id="spark" width="220" height="36"></canvas>
+      </div>
+      <div class="card">
+        <div class="label">drop rate</div>
+        <div class="value"><span id="droprate">–</span><span class="unit">%</span></div>
+        <div class="detail" id="dropsplit">–</div>
+      </div>
+      <div class="card">
+        <div class="label">packets</div>
+        <div class="value" id="totalpkts">–</div>
+        <div class="detail"><span id="totalbytes">–</span> total</div>
+      </div>
+      <div class="card">
+        <div class="label">dropped</div>
+        <div class="value drop" id="droppedpkts">–</div>
+        <div class="detail"><span id="droppedbytes">–</span> dropped</div>
+      </div>
+    </section>
+
+    <section class="panels">
+      <div class="panel" id="rules-panel">
+        <h2>rules</h2>
+
+        <h3>blocklist <span class="hint">source CIDR → drop</span></h3>
+        <ul id="blocklist" class="rulelist"></ul>
+        <form id="form-blocklist" class="add">
+          <input name="cidr" placeholder="10.0.0.5/32" required spellcheck="false">
+          <button>block</button>
+        </form>
+
+        <h3>ports <span class="hint">dest port</span></h3>
+        <ul id="portrules" class="rulelist"></ul>
+        <form id="form-port" class="add">
+          <select name="proto"><option>tcp</option><option>udp</option></select>
+          <input name="port" type="number" min="1" max="65535" placeholder="2222" required>
+          <select name="action"><option>drop</option><option>pass</option></select>
+          <button>add</button>
+        </form>
+
+        <h3>rate limits <span class="hint">per-source token bucket</span></h3>
+        <ul id="ratelimits" class="rulelist"></ul>
+        <form id="form-ratelimit" class="add">
+          <input name="cidr" placeholder="10.0.0.0/24" required spellcheck="false">
+          <input name="pps" type="number" min="1" placeholder="pps" required>
+          <input name="burst" type="number" min="0" placeholder="burst" required>
+          <button>limit</button>
+        </form>
+      </div>
+
+      <div class="panel" id="events-panel">
+        <h2>events <span class="live" id="live-dot">●</span></h2>
+        <table id="events">
+          <thead>
+            <tr><th>time</th><th>src</th><th>dst</th><th>proto</th><th>reason</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty" id="events-empty">no drop events yet</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
