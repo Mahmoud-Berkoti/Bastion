@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    # ubuntu-latest runners ship a BTF-enabled kernel new enough for
+    # BPF_PROG_TEST_RUN, so data-plane unit tests run without a NIC.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install BPF toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm libbpf-dev linux-tools-common linux-tools-$(uname -r)
+
+      - name: Generate vmlinux.h
+        run: make vmlinux
+
+      - name: Build BPF object
+        run: make bpf
+
+      - name: Build control plane
+        run: make go
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Staticcheck
+        uses: dominikh/staticcheck-action@v1
+        with:
+          version: "latest"
+          install-go: false
+
+      - name: Data plane unit tests (BPF_PROG_TEST_RUN)
+        run: sudo -E $(which go) test ./test/... -count=1 -v
