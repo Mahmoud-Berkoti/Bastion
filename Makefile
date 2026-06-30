@@ -33,8 +33,9 @@ vet:
 	$(GO) vet ./...
 
 # BPF_PROG_TEST_RUN unit tests need root (BPF syscalls) but no NIC.
+# Resolve the go binary now: sudo's secure_path usually lacks it.
 test: bpf vet
-	sudo -E $(GO) test ./test/... -count=1 -v
+	sudo -E $(shell which $(GO)) test ./test/... -count=1 -v
 
 # veth pair in a netns for safe XDP testing (never your real NIC).
 setup-veth:
