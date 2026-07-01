@@ -13,11 +13,11 @@ import (
 )
 
 type collector struct {
-	reader *stats.Reader
+	reader stats.Source
 	descs  map[string]*prometheus.Desc
 }
 
-func newCollector(r *stats.Reader) *collector {
+func newCollector(r stats.Source) *collector {
 	d := func(name, help string) *prometheus.Desc {
 		return prometheus.NewDesc("bastion_"+name, help, nil, nil)
 	}
@@ -63,8 +63,8 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	counter("event_drops_total", s.EventDrops)
 }
 
-// Handler returns an http.Handler serving /metrics for the given reader.
-func Handler(r *stats.Reader) http.Handler {
+// Handler returns an http.Handler serving /metrics for the given source.
+func Handler(r stats.Source) http.Handler {
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(newCollector(r))
 	mux := http.NewServeMux()

@@ -19,8 +19,8 @@ import (
 var webFS embed.FS
 
 type Server struct {
-	Rules  *rules.Manager
-	Stats  *stats.Reader
+	Rules  rules.Manager
+	Stats  stats.Source
 	Events *events.Hub
 	// Info reported at /api/v1/status for sanity checks (e.g. verifying
 	// the prog id is unchanged across live rule updates).

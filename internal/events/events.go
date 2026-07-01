@@ -155,6 +155,9 @@ func (h *Hub) Recent(limit int) []Event {
 	return out
 }
 
+// InjectFake injects a synthetic event directly — used by the demo mode.
+func (h *Hub) InjectFake(ev Event) { h.publish(ev) }
+
 // Subscribe returns a channel of live events; call the returned cancel
 // func to unsubscribe.
 func (h *Hub) Subscribe() (<-chan Event, func()) {

@@ -16,6 +16,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Manager is the interface both the real (BPF-backed) and fake (demo)
+// managers satisfy, so api.Server is independent of the backend.
+type Manager interface {
+	Snapshot() Config
+	RuleName(id uint32) string
+	AddBlocklist(cidr string) error
+	RemoveBlocklist(cidr string) error
+	AddPortRule(pr PortRule) error
+	RemovePortRule(proto string, port uint16) error
+	AddRateLimit(rl RateLimit) error
+	RemoveRateLimit(cidr string) error
+}
+
 type PortRule struct {
 	Proto  string `yaml:"proto" json:"proto"`   // "tcp" | "udp"
 	Port   uint16 `yaml:"port" json:"port"`     // destination port
@@ -67,7 +80,8 @@ const (
 
 // Manager reconciles desired config into the BPF maps. It also keeps a
 // rule-id registry so events can be resolved back to human-readable rules.
-type Manager struct {
+// BPFManager is the real, kernel-backed rule manager used in production.
+type BPFManager struct {
 	mu        sync.Mutex
 	blocklist *ebpf.Map
 	portRules *ebpf.Map
@@ -77,8 +91,8 @@ type Manager struct {
 	registry map[uint32]string // rule id -> description
 }
 
-func NewManager(blocklist, portRules, rateCfgs *ebpf.Map) *Manager {
-	return &Manager{
+func NewBPFManager(blocklist, portRules, rateCfgs *ebpf.Map) *BPFManager {
+	return &BPFManager{
 		blocklist: blocklist,
 		portRules: portRules,
 		rateCfgs:  rateCfgs,
@@ -129,7 +143,7 @@ func (c Config) validate() error {
 // Reconcile makes the BPF maps match cfg: adds missing entries, removes
 // stale ones, updates changed values. It never touches the program itself,
 // so rule changes are zero-reload.
-func (m *Manager) Reconcile(cfg Config) error {
+func (m *BPFManager)Reconcile(cfg Config) error {
 	if err := cfg.validate(); err != nil {
 		return err
 	}
@@ -190,14 +204,14 @@ func (m *Manager) Reconcile(cfg Config) error {
 }
 
 // Snapshot returns the currently applied config.
-func (m *Manager) Snapshot() Config {
+func (m *BPFManager)Snapshot() Config {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.current
 }
 
 // RuleName resolves a rule id from an event to its description.
-func (m *Manager) RuleName(id uint32) string {
+func (m *BPFManager)RuleName(id uint32) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if d, ok := m.registry[id]; ok {
@@ -209,7 +223,7 @@ func (m *Manager) RuleName(id uint32) string {
 // AddBlocklist / RemoveBlocklist etc. mutate the current config and
 // reconcile, so API changes and file reloads go through one code path.
 
-func (m *Manager) AddBlocklist(cidr string) error {
+func (m *BPFManager)AddBlocklist(cidr string) error {
 	cfg := m.Snapshot()
 	c := canonCIDR(cidr)
 	for _, existing := range cfg.Blocklist {
@@ -221,7 +235,7 @@ func (m *Manager) AddBlocklist(cidr string) error {
 	return m.Reconcile(cfg)
 }
 
-func (m *Manager) RemoveBlocklist(cidr string) error {
+func (m *BPFManager)RemoveBlocklist(cidr string) error {
 	cfg := m.Snapshot()
 	c := canonCIDR(cidr)
 	out := cfg.Blocklist[:0]
@@ -234,7 +248,7 @@ func (m *Manager) RemoveBlocklist(cidr string) error {
 	return m.Reconcile(cfg)
 }
 
-func (m *Manager) AddPortRule(pr PortRule) error {
+func (m *BPFManager)AddPortRule(pr PortRule) error {
 	cfg := m.Snapshot()
 	for i, existing := range cfg.PortRules {
 		if strings.EqualFold(existing.Proto, pr.Proto) && existing.Port == pr.Port {
@@ -246,7 +260,7 @@ func (m *Manager) AddPortRule(pr PortRule) error {
 	return m.Reconcile(cfg)
 }
 
-func (m *Manager) RemovePortRule(proto string, port uint16) error {
+func (m *BPFManager)RemovePortRule(proto string, port uint16) error {
 	cfg := m.Snapshot()
 	out := cfg.PortRules[:0]
 	for _, existing := range cfg.PortRules {
@@ -258,7 +272,7 @@ func (m *Manager) RemovePortRule(proto string, port uint16) error {
 	return m.Reconcile(cfg)
 }
 
-func (m *Manager) AddRateLimit(rl RateLimit) error {
+func (m *BPFManager)AddRateLimit(rl RateLimit) error {
 	cfg := m.Snapshot()
 	c := canonCIDR(rl.CIDR)
 	for i, existing := range cfg.RateLimits {
@@ -271,7 +285,7 @@ func (m *Manager) AddRateLimit(rl RateLimit) error {
 	return m.Reconcile(cfg)
 }
 
-func (m *Manager) RemoveRateLimit(cidr string) error {
+func (m *BPFManager)RemoveRateLimit(cidr string) error {
 	cfg := m.Snapshot()
 	c := canonCIDR(cidr)
 	out := cfg.RateLimits[:0]

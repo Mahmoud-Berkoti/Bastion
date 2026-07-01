@@ -23,6 +23,11 @@ type Stats struct {
 	EventDrops     uint64 `json:"event_drops"`
 }
 
+// Source is anything that can return a Stats snapshot.
+type Source interface {
+	Read() (Stats, error)
+}
+
 type Reader struct {
 	m *ebpf.Map
 }

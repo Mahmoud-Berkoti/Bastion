@@ -29,6 +29,10 @@ $(BPF_OBJ): $(BPF_SRC) bpf/common.h $(VMLINUX)
 go:
 	$(GO) build -o bin/bastion ./cmd/bastion
 
+demo:
+	CGO_ENABLED=0 $(GO) build -ldflags="-s" -o bin/bastion-demo ./cmd/bastion-demo
+	./bin/bastion-demo
+
 vet:
 	$(GO) vet ./...
 

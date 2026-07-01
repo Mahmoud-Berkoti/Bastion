@@ -48,7 +48,7 @@ func main() {
 	}
 	defer b.Close()
 
-	mgr := rules.NewManager(b.Blocklist, b.PortRules, b.RateCfgs)
+	mgr := rules.NewBPFManager(b.Blocklist, b.PortRules, b.RateCfgs)
 	cfg, err := rules.LoadFile(*cfgPath)
 	if err != nil {
 		log.Fatalf("loading config: %v", err)
@@ -103,7 +103,7 @@ func serve(name string, srv *http.Server) {
 
 // watchConfig reconciles the maps whenever rules.yaml changes — a small
 // declarative controller: desired state in the file, actual state in maps.
-func watchConfig(ctx context.Context, path string, mgr *rules.Manager) {
+func watchConfig(ctx context.Context, path string, mgr *rules.BPFManager) {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Printf("config watch disabled: %v", err)
