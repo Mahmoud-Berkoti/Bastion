@@ -1,0 +1,10 @@
+# Bastion — incremental GitHub push schedule
+# Runs every Saturday at 10:00 AM (4 Saturdays = 4 weekly batches).
+# Install with:  crontab scripts/crontab.txt
+#
+# To add to an existing crontab without overwriting:
+#   (crontab -l 2>/dev/null; cat scripts/crontab.txt) | crontab -
+#
+# Logs go to ~/Library/Logs/bastion-push.log
+
+0 10 * * 6 cd /Users/mahmoud/Desktop/Projects/Bastion && bash scripts/push_schedule.sh >> ~/Library/Logs/bastion-push.log 2>&1

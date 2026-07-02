@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS LaunchAgent — runs push_schedule.sh every Saturday at 10:00 AM.
+  Preferred over cron on macOS: respects sleep/wake and keychain access.
+
+  Install:
+    cp scripts/com.mberkoti.bastion-push.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.mberkoti.bastion-push.plist
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/com.mberkoti.bastion-push.plist
+    rm ~/Library/LaunchAgents/com.mberkoti.bastion-push.plist
+
+  Trigger manually (test one push now):
+    launchctl start com.mberkoti.bastion-push
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.mberkoti.bastion-push</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/mahmoud/Desktop/Projects/Bastion/scripts/push_schedule.sh</string>
+  </array>
+
+  <!-- Every Saturday (weekday 6) at 10:00 AM -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>6</integer>
+    <key>Hour</key>
+    <integer>10</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/mahmoud/Library/Logs/bastion-push.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/mahmoud/Library/Logs/bastion-push.log</string>
+
+  <!-- Run on next opportunity if the scheduled time was missed (e.g. Mac was asleep) -->
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

@@ -9,3 +9,6 @@ bin/
 # editor
 .DS_Store
 *.swp
+
+# push schedule state (local only)
+.push_state
