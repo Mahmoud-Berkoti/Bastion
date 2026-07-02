@@ -100,8 +100,17 @@ func NewBPFManager(blocklist, portRules, rateCfgs *ebpf.Map) *BPFManager {
 	}
 }
 
+const maxConfigBytes = 10 * 1024 * 1024 // 10 MiB — sanity cap against accidental huge files
+
 func LoadFile(path string) (Config, error) {
 	var cfg Config
+	info, err := os.Stat(path)
+	if err != nil {
+		return cfg, err
+	}
+	if info.Size() > maxConfigBytes {
+		return cfg, fmt.Errorf("%s is too large (%d bytes, max %d)", path, info.Size(), maxConfigBytes)
+	}
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return cfg, err
