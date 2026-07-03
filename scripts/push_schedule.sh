@@ -16,7 +16,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-REMOTE_URL="https://github.com/Mahmoud-Berkoti/Bastion.git"
+REMOTE_URL="git@github.com:Mahmoud-Berkoti/Bastion.git"
 STATE_FILE="$REPO_ROOT/.push_state"
 DRY_RUN=0
 [[ "${1:-}" == "--dry-run" ]] && DRY_RUN=1
