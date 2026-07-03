@@ -33,6 +33,7 @@ COMMITS=(
   "c0b5dc4"  # Week 4 — fix(make): go binary path under sudo
   "7dfc1fd"  # Week 4 — feat(demo): cross-platform demo mode
   "737e2f6"  # Week 4 — fix(security): API hardening
+  "077d618"  # Week 4 — chore(deploy): push schedule scripts
 )
 
 # Commits to include in each weekly batch (index into COMMITS array).
@@ -41,7 +42,7 @@ BATCHES=(
   "0:2"   # Week 1: env + BPF data plane
   "2:2"   # Week 2: control plane + API/web
   "4:2"   # Week 3: tests + benchmarks
-  "6:4"   # Week 4: docs, fixes, demo, security
+  "6:5"   # Week 4: docs, fixes, demo, security, deploy scripts
 )
 
 # ---------- helpers ----------
