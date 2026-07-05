@@ -20,10 +20,12 @@ jobs:
       - name: Install BPF toolchain
         run: |
           sudo apt-get update
-          # bpftool is a standalone package on Ubuntu 22.04+ — no kernel-version
-          # suffix needed. linux-tools-$(uname -r) fails on azure/generic kernels
-          # that don't ship a matching tools package.
-          sudo apt-get install -y clang llvm libbpf-dev bpftool
+          sudo apt-get install -y clang llvm libbpf-dev linux-tools-common linux-tools-generic
+          # linux-tools-common installs a wrapper that calls
+          # /usr/lib/linux-tools/$(uname -r)/bpftool, which won't exist for the
+          # azure runner kernel. Symlink the generic binary directly instead.
+          sudo ln -sf "$(find /usr/lib/linux-tools -name bpftool | head -1)" /usr/local/bin/bpftool
+          bpftool version
 
       - name: Generate vmlinux.h
         run: make vmlinux
