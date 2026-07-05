@@ -52,11 +52,10 @@ type RuleResolver interface {
 type Hub struct {
 	resolve RuleResolver
 
-	mu     sync.Mutex
-	buf    []Event // ring, newest at end
-	max    int
-	subs   map[chan Event]struct{}
-	closed bool
+	mu   sync.Mutex
+	buf  []Event // ring, newest at end
+	max  int
+	subs map[chan Event]struct{}
 }
 
 func NewHub(historySize int, resolve RuleResolver) *Hub {

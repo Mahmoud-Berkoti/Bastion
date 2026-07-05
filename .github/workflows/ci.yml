@@ -40,9 +40,9 @@ jobs:
         run: go vet ./...
 
       - name: Staticcheck
-        uses: dominikh/staticcheck-action@v1
+        uses: dominikh/staticcheck-action@v1.3.0
         with:
-          version: "latest"
+          version: "2025.1"
           install-go: false
 
       - name: Data plane unit tests (BPF_PROG_TEST_RUN)
