@@ -57,7 +57,7 @@ struct {
 struct {
 	__uint(type, BPF_MAP_TYPE_LRU_PERCPU_HASH);
 	__type(key, __u32); /* saddr */
-	__type(value, struct token_bucket);
+	__type(value, struct bastion_token_bucket);
 	__uint(max_entries, 16384);
 } rate_state SEC(".maps");
 
@@ -139,9 +139,9 @@ static __always_inline int rate_limit_exceeded(__u32 saddr,
 	__u64 now = bpf_ktime_get_ns();
 	__u64 max_tokens = cfg->burst * TOKEN_SCALE;
 
-	struct token_bucket *tb = bpf_map_lookup_elem(&rate_state, &saddr);
+	struct bastion_token_bucket *tb = bpf_map_lookup_elem(&rate_state, &saddr);
 	if (!tb) {
-		struct token_bucket fresh = { .last_ns = now };
+		struct bastion_token_bucket fresh = { .last_ns = now };
 		if (max_tokens >= TOKEN_SCALE) {
 			fresh.tokens = max_tokens - TOKEN_SCALE; /* spend one */
 			bpf_map_update_elem(&rate_state, &saddr, &fresh, BPF_ANY);

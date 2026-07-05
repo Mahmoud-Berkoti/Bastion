@@ -42,7 +42,7 @@ struct rate_cfg {
 	__u32 pad;
 };
 
-struct token_bucket {
+struct bastion_token_bucket {
 	__u64 tokens;  /* fixed point, scaled by TOKEN_SCALE */
 	__u64 last_ns; /* bpf_ktime_get_ns() of last refill */
 };
